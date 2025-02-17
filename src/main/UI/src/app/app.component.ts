@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import {FormControl, FormGroup} from '@angular/forms';
 import {HttpClient, HttpResponse,HttpHeaders} from "@angular/common/http";
-import { Observable } from 'rxjs';
-import {map} from "rxjs/operators";
+import { Observable, of } from 'rxjs';
+import { map, tap, catchError } from "rxjs/operators";
+
 
 
 
@@ -28,6 +29,9 @@ export class AppComponent implements OnInit{
   currentCheckInVal!:string;
   currentCheckOutVal!:string;
 
+  welcomeMessages$!: Observable<{ english: string, french: string}>;
+
+
     ngOnInit(){
       this.roomsearch= new FormGroup({
         checkin: new FormControl(' '),
@@ -44,6 +48,17 @@ export class AppComponent implements OnInit{
       this.currentCheckInVal = x.checkin;
       this.currentCheckOutVal = x.checkout;
     });
+
+    // testing to see if angular is fetching data from back end
+      console.log("Fetching welcome messages...");
+      this.welcomeMessages$ = this.getWelcomeMessages().pipe(
+        tap(messages => console.log("Received messages:", JSON.stringify(messages, null, 2))),
+        catchError(error => {
+          console.error("Error fetching messages:", error);
+          return [];
+        })
+      );
+
   }
 
     onSubmit({value,valid}:{value:Roomsearch,valid:boolean}){
@@ -79,8 +94,13 @@ export class AppComponent implements OnInit{
 
     getAll(): Observable<any> {
 
-
        return this.httpClient.get(this.baseURL + '/room/reservation/v1?checkin='+ this.currentCheckInVal + '&checkout='+this.currentCheckOutVal, {responseType: 'json'});
+    }
+
+    //welcome messages for component.html
+    getWelcomeMessages(): Observable<{ english: string, french: string}> {
+      return this.httpClient.get<{ english: string, french: string}>('http://localhost:8080/api/welcome');
+
     }
 
   }
