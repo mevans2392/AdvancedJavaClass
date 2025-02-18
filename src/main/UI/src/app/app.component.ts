@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {FormControl, FormGroup} from '@angular/forms';
 import {HttpClient, HttpResponse,HttpHeaders} from "@angular/common/http";
-import { Observable, of } from 'rxjs';
+import {forkJoin, Observable, of} from 'rxjs';
 import { map, tap, catchError } from "rxjs/operators";
 import {formatCurrency} from "@angular/common";
 
@@ -16,6 +16,7 @@ import {formatCurrency} from "@angular/common";
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit{
+  presentationTimes!: string[];
 
   constructor(private httpClient:HttpClient){}
 
@@ -31,6 +32,10 @@ export class AppComponent implements OnInit{
   currentCheckOutVal!:string;
 
   welcomeMessages$!: Observable<{ english: string, french: string}>;
+  easternTime:string = '';
+  mountainTime!: string;
+  utcTime!: string;
+  timeZoneId!: string;
 
 
   ngOnInit(){
@@ -60,14 +65,14 @@ export class AppComponent implements OnInit{
       })
     );
 
+    this.fetchTimes();
+
   }
 
   onSubmit({value,valid}:{value:Roomsearch,valid:boolean}){
     this.getAll().subscribe(
 
       rooms => {console.log(Object.values(rooms)[0]);this.rooms=<Room[]>Object.values(rooms)[0]; }
-
-      //this.roomPriceConversion();
 
   )}
 
@@ -116,7 +121,24 @@ export class AppComponent implements OnInit{
   //welcome messages for component.html
   getWelcomeMessages(): Observable<{ english: string, french: string}> {
     return this.httpClient.get<{ english: string, french: string}>('http://localhost:8080/api/welcome');
+  }
 
+  getPresentationTimes(): Observable<string[]> {
+    const zones = ['eastern', 'mountain', 'utc']
+
+    const requests: Observable<string>[] = zones.map(zone =>
+      this.httpClient.get(`http://localhost:8080/api/timezone?timeZoneId=${zone}`, {responseType: 'text'}));
+
+    return forkJoin(requests);
+  }
+
+  fetchTimes(): void {
+    this.getPresentationTimes().subscribe(
+      (responses) => {
+        this.presentationTimes = responses;
+        console.log('All timezones: ' + responses);
+      }
+    )
   }
 
 }

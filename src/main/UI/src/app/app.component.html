@@ -8,6 +8,9 @@
       <p *ngIf="!(welcomeMessages$ | async)">Loading Messages...</p>
       <h3>{{ (welcomeMessages$ | async)?.english }}</h3>
       <h3>{{ (welcomeMessages$ | async)?.french }}</h3>
+      <ul>
+        <strong><li *ngFor="let time of presentationTimes" style="color:white;"><h3>{{ time }}</h3></li></strong>
+      </ul>
       <p><a href="/#welcome"><img src="assets/images/arrow.png" alt="down arrow"></a></p>
     </div>
   </article>
